@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chipi AI - Intelligent Chatbot System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #4da6ff 0%, #66d9b3 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px 40px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #4da6ff 0%, #66d9b3 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        nav {
+            display: flex;
+            gap: 30px;
+        }
+        
+        nav a {
+            color: #333;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        nav a:hover {
+            color: #4da6ff;
+        }
+        
+        .nav-button {
+            background: linear-gradient(135deg, #4da6ff 0%, #66d9b3 100%);
+            color: white;
+            padding: 10px 25px;
+            border-radius: 25px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.3s;
+            text-decoration: none;
+        }
+        
+        .nav-button:hover {
+            transform: scale(1.05);
+        }
+        
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 60px 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        
+        .hero {
+            text-align: center;
+            color: white;
+            margin-bottom: 60px;
+        }
+        
+        .hero h1 {
+            font-size: 56px;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .hero p {
+            font-size: 20px;
+            margin-bottom: 30px;
+            opacity: 0.95;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn-primary, .btn-secondary {
+            padding: 15px 40px;
+            font-size: 16px;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: white;
+            color: #4da6ff;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid white;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-3px);
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 60px;
+        }
+        
+        .feature-card {
+            background: white;
+            padding: 40px 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+        }
+        
+        .feature-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        
+        .feature-card h3 {
+            color: #4da6ff;
+            margin-bottom: 15px;
+            font-size: 22px;
+        }
+        
+        .feature-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .tech-stack {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            margin-top: 60px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tech-stack h2 {
+            color: #4da6ff;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 28px;
+        }
+        
+        .tech-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .tech-item {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e6f9f0 100%);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border-left: 4px solid #4da6ff;
+        }
+        
+        .tech-item h4 {
+            color: #4da6ff;
+            margin-bottom: 10px;
+        }
+        
+        .tech-item p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .quick-links {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            margin-top: 30px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .quick-links h2 {
+            color: #4da6ff;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 28px;
+        }
+        
+        .links-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+        }
+        
+        .link-box {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e6f9f0 100%);
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .link-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .link-box h4 {
+            color: #4da6ff;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        
+        .link-box p {
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 15px;
+        }
+        
+        .link-box a {
+            color: #66d9b3;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+        
+        .link-box a:hover {
+            color: #4da6ff;
+        }
+        
+        footer {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px 40px;
+            text-align: center;
+            color: #666;
+            border-top: 1px solid #e0e0e0;
+            margin-top: 60px;
+        }
+        
+        footer p {
+            margin-bottom: 10px;
+        }
+        
+        .social-links {
+            margin-top: 15px;
+        }
+        
+        .social-links a {
+            color: #4da6ff;
+            margin: 0 10px;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .social-links a:hover {
+            color: #66d9b3;
+        }
+        
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            nav {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .hero h1 {
+                font-size: 36px;
+            }
+            
+            .hero p {
+                font-size: 16px;
+            }
+            
+            .container {
+                padding: 40px 20px;
+            }
+            
+            .cta-buttons {
+                flex-direction: column;
+            }
+            
+            .btn-primary, .btn-secondary {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">🤖 Chipi AI</div>
+        <nav>
+            <a href="#features">Features</a>
+            <a href="#tech">Technology</a>
+            <a href="#docs">Documentation</a>
+            <a href="chipi-chatbot-api.html" class="nav-button">Open Chatbot</a>
+        </nav>
+    </header>
+    
+    <div class="container">
+        <div class="hero">
+            <h1>Welcome to Chipi AI</h1>
+            <p>An intelligent, self-contained AI chatbot system powered by Python and JavaScript. Chat, learn, and customize with our intuitive admin panel.</p>
+            <div class="cta-buttons">
+                <a href="chipi-chatbot-api.html" class="btn-primary">Start Chatting</a>
+                <a href="#docs" class="btn-secondary">Learn More</a>
+            </div>
+        </div>
+        
+        <section class="features" id="features">
+            <div class="feature-card">
+                <div class="feature-icon">💬</div>
+                <h3>Smart Conversations</h3>
+                <p>Engage in natural, context-aware conversations with intelligent pattern matching and diverse response options.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">⚙️</div>
+                <h3>Admin Panel</h3>
+                <p>Easily manage AI training data without coding. Add responses, patterns, and create new categories on the fly.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🔄</div>
+                <h3>Live Updates</h3>
+                <p>Update training data in real-time. Changes are instantly reflected in the chatbot without restarts.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🌐</div>
+                <h3>Client-Server</h3>
+                <p>Powerful Python backend communicates with JavaScript frontend via clean REST API architecture.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🎨</div>
+                <h3>Beautiful Design</h3>
+                <p>Soft blue-green gradients create a calm, welcoming interface. Fully responsive on all devices.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Statistics & Insights</h3>
+                <p>View real-time statistics on categories, patterns, and responses. Monitor your AI's knowledge base growth.</p>
+            </div>
+        </section>
+        
+        <section class="tech-stack" id="tech">
+            <h2>Technology Stack</h2>
+            <div class="tech-items">
+                <div class="tech-item">
+                    <h4>Frontend</h4>
+                    <p>HTML5, CSS3, JavaScript ES6+</p>
+                </div>
+                <div class="tech-item">
+                    <h4>Backend</h4>
+                    <p>Python 3.7+, Flask, Flask-CORS</p>
+                </div>
+                <div class="tech-item">
+                    <h4>Data Storage</h4>
+                    <p>JSON file-based persistence</p>
+                </div>
+                <div class="tech-item">
+                    <h4>API</h4>
+                    <p>RESTful with 10+ endpoints</p>
+                </div>
+                <div class="tech-item">
+                    <h4>Architecture</h4>
+                    <p>Client-Server with CORS</p>
+                </div>
+                <div class="tech-item">
+                    <h4>Deployment</h4>
+                    <p>Localhost Port 5000</p>
+                </div>
+            </div>
+        </section>
+        
+        <section class="quick-links" id="docs">
+            <h2>Quick Links & Documentation</h2>
+            <div class="links-grid">
+                <div class="link-box">
+                    <h4>🚀 Get Started</h4>
+                    <p>Quick 3-step setup guide to get Chipi running</p>
+                    <a href="START_HERE.md">Open Guide</a>
+                </div>
+                
+                <div class="link-box">
+                    <h4>⚡ Quick Start</h4>
+                    <p>Fast setup and testing instructions</p>
+                    <a href="QUICKSTART.md">Read More</a>
+                </div>
+                
+                <div class="link-box">
+                    <h4>📚 Full Docs</h4>
+                    <p>Complete technical documentation</p>
+                    <a href="README.md">Documentation</a>
+                </div>
+                
+                <div class="link-box">
+                    <h4>🔧 Installation</h4>
+                    <p>Detailed installation and setup guide</p>
+                    <a href="INSTALLATION.md">Instructions</a>
+                </div>
+                
+                <div class="link-box">
+                    <h4>✅ Testing</h4>
+                    <p>Complete testing guide with 15 test scenarios</p>
+                    <a href="TESTING.md">Test Guide</a>
+                </div>
+                
+                <div class="link-box">
+                    <h4>📊 Overview</h4>
+                    <p>Complete system architecture and overview</p>
+                    <a href="SYSTEM_OVERVIEW.md">System Info</a>
+                </div>
+                
+                <div class="link-box">
+                    <h4>📁 Files</h4>
+                    <p>Complete manifest of all Chipi files</p>
+                    <a href="FILE_MANIFEST.md">File List</a>
+                </div>
+                
+                <div class="link-box">
+                    <h4>💬 Open Chatbot</h4>
+                    <p>Start chatting with Chipi AI now</p>
+                    <a href="chipi-chatbot-api.html">Chat Now</a>
+                </div>
+            </div>
+        </section>
+    </div>
+    
+    <footer>
+        <p><strong>Chipi AI v1.0</strong> - Intelligent Self-Contained Chatbot System</p>
+        <p>Built with Python Flask Backend & JavaScript Frontend</p>
+        <div class="social-links">
+            <a href="#">Twitter</a>
+            <a href="#">GitHub</a>
+            <a href="#">LinkedIn</a>
+        </div>
+        <p style="margin-top: 20px; font-size: 12px; color: #999;">© 2025 Chipi AI. All rights reserved.</p>
+    </footer>
+</body>
+</html>
