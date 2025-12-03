@@ -82,9 +82,9 @@
             background: #4ade80;
         }
         
-        .status-dot.disconnected {
-            background: #f87171;
-            animation: none;
+        .status-dot.local {
+            background: #4da6ff;
+            animation: pulse 2s infinite;
         }
         
         @keyframes pulse {
@@ -462,8 +462,8 @@
                 <h1>Chipi</h1>
                 <p>AI Assistant with Live Data Updates</p>
                 <div class="connection-status">
-                    <span class="status-dot connected" id="statusDot"></span>
-                    <span id="statusText">Connecting to server...</span>
+                    <span class="status-dot" id="statusDot"></span>
+                    <span id="statusText">Initializing...</span>
                 </div>
                 <div class="header-buttons">
                     <button class="header-btn" onclick="openAboutModal()">About Chipi</button>
@@ -606,7 +606,49 @@
     </div>
 
     <script>
-        const API_URL = 'http://localhost:5000/api';
+        
+        // Embedded default training data for standalone mode
+        function getDefaultTrainingDataJS() {
+            return {
+                "greetings": {
+                    "patterns": ["hello", "hi", "hey", "greetings", "what's up", "how are you"],
+                    "responses": [
+                        "Hello. I am Chipi. I am happy to see you today. How can I help you?",
+                        "Hi there. It is great to see you here. What would you like to talk about?",
+                        "Hey. I am Chipi, your friendly AI assistant. How can I help you?"
+                    ]
+                },
+                "aboutMe": {
+                    "patterns": ["who are you", "what are you", "tell me about yourself"],
+                    "responses": [
+                        "I am Chipi, an AI chatbot created to help and chat with people.",
+                        "My name is Chipi and I am a fully self-contained AI assistant."
+                    ]
+                },
+                "help": {
+                    "patterns": ["can you help", "help me", "i need help"],
+                    "responses": [
+                        "Of course I can help you. Please tell me what you need.",
+                        "I would be very happy to help you with whatever you need."
+                    ]
+                },
+                "goodbye": {
+                    "patterns": ["bye", "goodbye", "see you", "farewell"],
+                    "responses": [
+                        "Goodbye. It was great chatting with you. Come back anytime.",
+                        "See you later. Thanks for the conversation. Have a wonderful day."
+                    ]
+                }
+            };
+        }
+        // API configuration: set to null for standalone (no internet/backend required)
+        const DEFAULT_API_URL = 'http://localhost:5000/api';
+        let API_URL = DEFAULT_API_URL;
+        // Auto-detect: when hosted on GitHub Pages or served over HTTPS, default to standalone local mode
+        if (window.location.hostname.endsWith('github.io') || window.location.protocol === 'https:') {
+            API_URL = null; // standalone mode - use local JSON or embedded data
+        }
+        
         let chipiAI = null;
         let serverConnected = false;
 
@@ -619,13 +661,35 @@
             }
             
             async loadTrainingDataFromServer() {
+                // If API_URL is configured use the server; otherwise load local JSON file or fallback
                 try {
-                    const response = await fetch(`${API_URL}/data`);
-                    if (!response.ok) throw new Error('Failed to load data');
-                    const result = await response.json();
-                    this.trainingData = result.data;
-                    this.initialized = true;
-                    return true;
+                    if (API_URL) {
+                        const response = await fetch(`${API_URL}/data`);
+                        if (!response.ok) throw new Error('Failed to load data from API');
+                        const result = await response.json();
+                        this.trainingData = result.data;
+                        this.initialized = true;
+                        return true;
+                    } else {
+                        // Try to load a local training_data.json (served with the static site)
+                        try {
+                            const resp = await fetch('./training_data.json');
+                            if (resp.ok) {
+                                const json = await resp.json();
+                                // support both { data: {...} } and raw object
+                                this.trainingData = json.data ? json.data : json;
+                                this.initialized = true;
+                                return true;
+                            }
+                        } catch (e) {
+                            console.warn('Local training_data.json not found or failed to load:', e);
+                        }
+
+                        // Fallback to embedded default data
+                        this.trainingData = getDefaultTrainingDataJS();
+                        this.initialized = true;
+                        return true;
+                    }
                 } catch (error) {
                     console.error('Error loading training data:', error);
                     return false;
@@ -721,7 +785,12 @@
         function updateStatusIndicator(connected) {
             const statusDot = document.getElementById('statusDot');
             const statusText = document.getElementById('statusText');
-            
+            // If running in standalone (no API_URL) show local/standalone status
+            if (!API_URL) {
+                statusDot.className = 'status-dot local';
+                statusText.textContent = 'Standalone Mode — Local Data';
+                return;
+            }
             if (connected) {
                 statusDot.className = 'status-dot connected';
                 statusText.textContent = 'Connected to Server';
@@ -736,6 +805,8 @@
                 const HEALTH_POLL_MS = 5000; // check every 5 seconds
 
                 async function checkServerHealth() {
+                    // If no API configured, do not poll
+                    if (!API_URL) return false;
                     try {
                         const resp = await fetch(`${API_URL}/health`);
                         if (!resp.ok) throw new Error('Health check failed');
@@ -763,6 +834,8 @@
                 }
 
                 function startHealthPoll() {
+                    // If no API configured, do not poll
+                    if (!API_URL) return false;
                     if (healthPollInterval) return;
                     // Run immediately then on interval
                     checkServerHealth();
@@ -857,6 +930,10 @@
         }
         
         function openAdminModal() {
+            if (!API_URL) {
+                alert('Admin Panel requires a backend server. Running in standalone mode with local data.');
+                return;
+            }
             document.getElementById('adminModal').classList.add('show');
             loadAdminStats();
         }
@@ -901,6 +978,7 @@
         }
         
         async function addResponseToAPI() {
+            if (!API_URL) { alert('Cannot add response in standalone mode. Deploy backend to enable admin actions.'); return; }
             const category = document.getElementById('categoryInput').value.trim();
             const response = document.getElementById('responseInput').value.trim();
             
@@ -932,6 +1010,7 @@
         }
         
         async function addPatternToAPI() {
+            if (!API_URL) { alert('Cannot add pattern in standalone mode. Deploy backend to enable admin actions.'); return; }
             const category = document.getElementById('patternCategoryInput').value.trim();
             const pattern = document.getElementById('patternInput').value.trim();
             
@@ -963,6 +1042,7 @@
         }
         
         async function createNewCategory() {
+            if (!API_URL) { alert('Cannot create category in standalone mode. Deploy backend to enable admin actions.'); return; }
             const name = document.getElementById('newCategoryName').value.trim();
             const patternsStr = document.getElementById('newCategoryPatterns').value.trim();
             const response = document.getElementById('newCategoryResponse').value.trim();
@@ -998,8 +1078,12 @@
         }
         
         async function refreshData() {
-            await chipiAI.loadTrainingDataFromServer();
-            alert('Training data refreshed from server!');
+            const loaded = await chipiAI.loadTrainingDataFromServer();
+            if (API_URL) {
+                alert('Training data refreshed from server!');
+            } else {
+                alert('Training data refreshed from local file/embedded data (standalone mode).');
+            }
         }
         
         window.onclick = function(event) {
@@ -1018,4 +1102,7 @@
     </script>
 </body>
 </html>
+</body>
+</html>
+
 
