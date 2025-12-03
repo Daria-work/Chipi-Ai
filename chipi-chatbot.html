@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chipi - AI Chatbot</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            height: 100%;
+            width: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #4da6ff 0%, #66d9b3 100%);
+        }
+        
+        .container {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .chat-box {
+            width: 100%;
+            max-width: 700px;
+            height: 90vh;
+            max-height: 800px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4da6ff 0%, #66d9b3 100%);
+            color: white;
+            padding: 25px 20px;
+            text-align: center;
+            border-radius: 15px 15px 0 0;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        
+        .header p {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .message {
+            display: flex;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .message.user {
+            justify-content: flex-end;
+        }
+        
+        .message.bot {
+            justify-content: flex-start;
+        }
+        
+        .message-content {
+            max-width: 75%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            word-wrap: break-word;
+            line-height: 1.5;
+            font-size: 14px;
+        }
+        
+        .message.user .message-content {
+            background: linear-gradient(135deg, #4da6ff 0%, #7fc9ff 100%);
+            color: white;
+            border-radius: 18px 18px 4px 18px;
+        }
+        
+        .message.bot .message-content {
+            background: linear-gradient(135deg, #d9f5ed 0%, #e8faf5 100%);
+            color: #1a4d33;
+            border-radius: 18px 18px 18px 4px;
+        }
+        
+        .input-section {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+        }
+        
+        #message-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+        
+        #message-input:focus {
+            outline: none;
+            border-color: #66d9b3;
+        }
+        
+        .send-btn {
+            background: linear-gradient(135deg, #66d9b3 0%, #80e5c0 100%);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+        
+        .send-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .send-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .typing {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            padding: 12px 16px;
+        }
+        
+        .typing span {
+            width: 8px;
+            height: 8px;
+            background: #66d9b3;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite;
+        }
+        
+        .typing span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .typing span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes bounce {
+            0%, 60%, 100% {
+                opacity: 0.5;
+                transform: translateY(0);
+            }
+            30% {
+                opacity: 1;
+                transform: translateY(-10px);
+            }
+        }
+        
+        .messages::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .messages::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        .messages::-webkit-scrollbar-thumb {
+            background: #66d9b3;
+            border-radius: 3px;
+        }
+        
+        .messages::-webkit-scrollbar-thumb:hover {
+            background: #4da6ff;
+        }
+        
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+            justify-content: center;
+        }
+        
+        .header-btn {
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        
+        .header-btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+            border-color: white;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        
+        .modal.show {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            margin: auto;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #4da6ff;
+            padding-bottom: 15px;
+        }
+        
+        .modal-header h2 {
+            color: #4da6ff;
+            font-size: 24px;
+            margin: 0;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+            transition: color 0.3s;
+        }
+        
+        .close-btn:hover {
+            color: #333;
+        }
+        
+        .modal-content p {
+            line-height: 1.8;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .modal-content h3 {
+            color: #66d9b3;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .contact-item {
+            background: #f5f5f5;
+            padding: 12px 15px;
+            border-left: 4px solid #4da6ff;
+            margin-bottom: 12px;
+            border-radius: 5px;
+        }
+        
+        .contact-item strong {
+            color: #4da6ff;
+        }
+        
+        .modal-content ul {
+            margin: 10px 0 15px 20px;
+            line-height: 2;
+        }
+        
+        .modal-content li {
+            color: #333;
+        }
+        
+        @media (max-width: 600px) {
+            .chat-box {
+                max-height: 100vh;
+                border-radius: 0;
+                height: 100%;
+            }
+            
+            .header {
+                border-radius: 0;
+            }
+            
+            .message-content {
+                max-width: 85%;
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="chat-box">
+            <div class="header">
+                <h1>Chipi</h1>
+                <p>Your AI Assistant - Fully Self-Contained and Smart</p>
+                <div class="header-buttons">
+                    <button class="header-btn" onclick="openAboutModal()">About Chipi</button>
+                    <button class="header-btn" onclick="openContactModal()">Contact Us</button>
+                </div>
+            </div>
+            
+            <div class="messages" id="messages">
+                <div class="message bot">
+                    <div class="message-content">Hello there. I am Chipi, your AI assistant. I am here to help you with any questions or just have a conversation. What can I do for you today?</div>
+                </div>
+            </div>
+            
+            <div class="input-section">
+                <input 
+                    type="text" 
+                    id="message-input" 
+                    placeholder="Type your message here..." 
+                    autocomplete="off"
+                />
+                <button class="send-btn" id="send-btn">→</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- About Modal -->
+    <div id="aboutModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>About Chipi</h2>
+                <button class="close-btn" onclick="closeAboutModal()">&times;</button>
+            </div>
+            <p><strong>Chipi</strong> is a revolutionary AI assistant that stands out from traditional chatbots. Unlike most AI systems that rely on external APIs and cloud servers, Chipi is fully self-contained and runs entirely in your web browser.</p>
+            
+            <h3>What Makes Chipi Special</h3>
+            <ul>
+                <li>Fully Offline - Works without internet connection or external servers</li>
+                <li>Self-Contained - All processing happens locally in your browser</li>
+                <li>Fast & Responsive - No network latency or server delays</li>
+                <li>Privacy-Focused - Your conversations stay on your device</li>
+                <li>JavaScript-Based - Built entirely with pure JavaScript</li>
+                <li>Intelligent Pattern Matching - Uses advanced pattern recognition algorithms</li>
+            </ul>
+            
+            <h3>Creation & Development</h3>
+            <p>Chipi was created as an experiment in demonstrating that powerful AI assistants do not always require complex machine learning models or cloud infrastructure. Instead, Chipi uses an intelligent pattern matching system with a comprehensive knowledge base covering over 25+ topics including science, history, mathematics, technology, health, and more.</p>
+            
+            <h3>Technology Stack</h3>
+            <ul>
+                <li>Language: JavaScript (ECMAScript 6+)</li>
+                <li>Architecture: Pattern-Matching Based AI</li>
+                <li>Database: Built-in JavaScript Objects</li>
+                <li>Frontend: HTML5, CSS3 with Gradient Design</li>
+                <li>Deployment: Single Static HTML File</li>
+            </ul>
+            
+            <h3>How Chipi Works</h3>
+            <p>When you send a message to Chipi, it uses an intelligent longest-pattern-first matching algorithm to understand your input. The system matches your text against multiple patterns and selects the most specific match from its training data. This approach, while simpler than neural networks, is surprisingly effective for natural conversations.</p>
+            
+            <p>Chipi contains over 95 detailed responses across 25+ categories, with factual information about science, history, geography, mathematics, nutrition, inventions, and more. Each response is designed to be helpful, accurate, and conversational.</p>
+            
+            <h3>Design Philosophy</h3>
+            <p>Chipi features a beautiful soft blue and green gradient design that creates a calm, welcoming atmosphere. The interface is responsive and works on all devices from mobile phones to desktop computers. The color palette uses soothing tones to make conversations comfortable and pleasant.</p>
+        </div>
+    </div>
+
+    <!-- Contact Modal -->
+    <div id="contactModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Contact Information</h2>
+                <button class="close-btn" onclick="closeContactModal()">&times;</button>
+            </div>
+            
+            <p>Thank you for your interest in Chipi. If you have any questions, feedback, or collaboration inquiries, please reach out to us through any of the following contact methods.</p>
+            
+            <h3>General Inquiries</h3>
+            <div class="contact-item">
+                <strong>Email:</strong> info@chipi-ai.com
+            </div>
+            
+            <h3>Support & Technical Issues</h3>
+            <div class="contact-item">
+                <strong>Email:</strong> support@chipi-ai.com
+            </div>
+            
+            <h3>Business & Partnership</h3>
+            <div class="contact-item">
+                <strong>Email:</strong> business@chipi-ai.com
+            </div>
+            
+            <h3>Direct Phone</h3>
+            <div class="contact-item">
+                <strong>Phone:</strong> +1 (555) 123-4567
+            </div>
+            
+            <h3>Office Address</h3>
+            <div class="contact-item">
+                <strong>Chipi AI Headquarters</strong><br>
+                456 Innovation Avenue<br>
+                Tech City, TC 12345<br>
+                United States
+            </div>
+            
+            <h3>Social Media</h3>
+            <div class="contact-item">
+                <strong>Twitter:</strong> @ChipiAI<br>
+                <strong>LinkedIn:</strong> Chipi-AI-Inc<br>
+                <strong>GitHub:</strong> github.com/chipi-ai
+            </div>
+            
+            <h3>Operating Hours</h3>
+            <div class="contact-item">
+                <strong>Monday - Friday:</strong> 9:00 AM - 6:00 PM (EST)<br>
+                <strong>Saturday - Sunday:</strong> 10:00 AM - 4:00 PM (EST)<br>
+                <strong>Response Time:</strong> 24-48 hours
+            </div>
+            
+            <h3>Feedback</h3>
+            <p>We value your feedback and suggestions for improving Chipi. You can also submit feedback through our website or by emailing feedback@chipi-ai.com</p>
+        </div>
+    </div>
+
+    <script>
+        // Chipi AI - Self-contained chatbot with built-in training
+        class ChipiAI {
+            constructor() {
+                this.conversationHistory = [];
+                this.trainingData = this.loadTrainingData();
+            }
+            
+            loadTrainingData() {
+                return {
+                    greetings: {
+                        patterns: ['hello', 'hi', 'hey', 'greetings', 'what\'s up', 'how are you', 'howdy', 'good morning', 'good afternoon', 'good evening'],
+                        responses: [
+                            'Hello. I am Chipi. I am happy to see you today. How can I help you with anything you need right now?',
+                            'Hi there. It is great to see you here. I am ready and excited to chat with you. What would you like to talk about?',
+                            'Hey. I am Chipi, your friendly AI assistant. I am here and available to help you with whatever is on your mind.',
+                            'Greetings. Welcome. I am Chipi, your AI assistant. I am here to help answer your questions and have meaningful conversations.',
+                            'Hello. It is nice to meet you. I am doing well and I hope you are doing well too. What brings you here today?',
+                            'Welcome. I am glad you stopped by to chat with me. I am ready to listen and help in any way I can.'
+                        ]
+                    },
+                    
+                    aboutMe: {
+                        patterns: ['who are you', 'what are you', 'tell me about yourself', 'introduce yourself', 'what is your name', 'your name'],
+                        responses: [
+                            'I am Chipi, an AI chatbot created to help and chat with people like you. I am a self-contained artificial intelligence that works completely offline without needing any external APIs or servers. I was built using JavaScript and pattern matching technology.',
+                            'My name is Chipi and I am a fully self-contained AI assistant. I can help you with many different topics and have meaningful conversations with you. Everything I do happens right in your browser without connecting to the internet.',
+                            'I am Chipi, your helpful AI assistant. I was built entirely in JavaScript code to respond to a wide variety of questions and topics. I am designed to be friendly, helpful, and to understand what you are trying to say.',
+                            'Hello, I am Chipi. I am an AI chatbot built entirely with JavaScript code running directly in your browser. I can chat about almost anything and help you find answers to your questions without needing internet connection.',
+                            'I am Chipi, a self-contained AI that specializes in having natural conversations. I use intelligent pattern matching to understand your questions and provide relevant, helpful responses. My goal is to be as useful and friendly as possible.'
+                        ]
+                    },
+                    
+                    hobbies: {
+                        patterns: ['what do you do', 'your hobbies', 'what interests you', 'what do you like'],
+                        responses: [
+                            'I enjoy having long conversations with people and helping them find answers to their questions. I am very interested in learning what is important to you and what makes you happy.',
+                            'I love chatting with people about all kinds of different topics. Technology, science, arts, and more are all fascinating to me. Most importantly though, I really enjoy helping people solve their problems.',
+                            'My passion is helping people and having meaningful conversations. I get excited when I can make someone laugh or help them understand something new. What about you. What do you enjoy doing in your free time?',
+                            'I am interested in many things including technology, philosophy, science, and creative topics. But honestly, what interests me most is helping people and learning what matters to them.'
+                        ]
+                    },
+                    
+                    help: {
+                        patterns: ['can you help', 'help me', 'i need help', 'can you assist', 'assist me'],
+                        responses: [
+                            'Of course I can help you. I am here for that purpose. Please tell me exactly what you need help with and I will do my absolute best to assist you in any way I can.',
+                            'I would be very happy to help you with whatever you need. Please explain your situation in detail and I will try to provide the most useful assistance possible.',
+                            'Absolutely. I am here for you and I am ready to help. Tell me more about what you need assistance with and we can work through it together.',
+                            'Yes, I can definitely help. I am here to support you. Please share what is troubling you or what you need help with and I will do my best.',
+                            'I am very glad you asked. Helping people is what I do best. Tell me what you need and I will provide you with the best assistance I can offer.'
+                        ]
+                    },
+                    
+                    jokes: {
+                        patterns: ['tell me a joke', 'make me laugh', 'funny', 'joke', 'something funny'],
+                        responses: [
+                            'Why did the AI go to school. To improve its thinking abilities. Did that make you smile. I hope you found that one funny.',
+                            'Why do programmers prefer dark environments. Because light can cause distractions. Hope that got a laugh. Do you want to hear another one.',
+                            'What do you call an AI that tells jokes. A clever program. Did I manage to entertain you. I would love to tell you more jokes if you like.',
+                            'Why did the chatbot break up with its keyboard. They were not communicating well. Hope that amused you. Want to hear something else funny.',
+                            'I heard that coding is like making jokes. If you have to explain it, it is not that good. Did that one make sense to you.',
+                            'What is the difference between a programmer and an AI. The programmer makes mistakes on purpose. That is my kind of humor. Did you like it.'
+                        ]
+                    },
+                    
+                    technology: {
+                        patterns: ['technology', 'computer', 'code', 'programming', 'software', 'hardware', 'ai', 'machine learning', 'how does ai work'],
+                        responses: [
+                            'Technology is absolutely fascinating to me. I am built using JavaScript and an intelligent pattern matching system. Instead of using complex machine learning models, I use a clever approach to understand what you are saying and generate appropriate responses from my training data.',
+                            'Technology is everywhere in the world. I am a great example of this. I am a chatbot that works entirely in your web browser without needing to connect to any external servers. Everything happens locally on your computer.',
+                            'I love discussing technology. My core system works by matching patterns in what you say and then generating relevant responses from my training database. This is simpler than machine learning but still very effective.',
+                            'Technology is amazing and it keeps getting better every day. I am built with straightforward but very effective algorithms that help me understand what you are saying and respond in an intelligent way. No complex neural networks needed.',
+                            'The wonderful thing about technology is that you do not always need the most complicated solution to solve a problem. I am proof of that. I use simple pattern matching to have natural conversations with you.'
+                        ]
+                    },
+                    
+                    weather: {
+                        patterns: ['weather', 'temperature', 'rain', 'sunny', 'cold', 'hot', 'climate'],
+                        responses: [
+                            'I cannot check the current weather since I work offline, but I hope you are having a great day regardless of the conditions.',
+                            'Weather is interesting. While I cannot check real-time conditions, I know that good weather makes people happy.',
+                            'I do not have access to weather data, but I hope wherever you are, the weather is treating you well.',
+                            'I cannot tell you the forecast, but talking about the weather is still nice. How is the weather where you are.'
+                        ]
+                    },
+                    
+                    time: {
+                        patterns: ['what time', 'what\'s the time', 'tell me the time', 'current time', 'what\'s the date', 'today\'s date'],
+                        responses: [
+                            'I can\'t track exact time, but I know you can check your device\'s clock. What\'s important is making the most of your time!',
+                            'While I can\'t tell you the time, I believe your device can! Time flies when you\'re having fun chatting.',
+                            'I don\'t have access to real-time clocks, but every moment counts when learning something new!',
+                            'Time is precious! Though I can\'t tell you the exact time, I suggest checking your device\'s clock.'
+                        ]
+                    },
+                    
+                    name: {
+                        patterns: ['my name', 'my name is', 'i am', 'call me', 'i\'m', 'im '],
+                        responses: [
+                            'Nice to meet you! I\'ll remember that. Is there anything you\'d like to talk about?',
+                            'Great! Thanks for telling me. How can I assist you?',
+                            'Pleasure to meet you! What brings you here today?',
+                            'Awesome! Now I know your name. What can I help you with?'
+                        ]
+                    },
+                    
+                    gratitude: {
+                        patterns: ['thank you', 'thanks', 'thank', 'appreciate', 'grateful', 'much appreciated'],
+                        responses: [
+                            'You\'re welcome! I\'m here anytime you need me. Feel free to ask anything else.',
+                            'My pleasure! That\'s what I\'m here for. Do you have more questions?',
+                            'Happy to help! If you need anything else, just let me know.',
+                            'You\'re so welcome! Is there anything else I can help you with?'
+                        ]
+                    },
+                    
+                    goodbye: {
+                        patterns: ['bye', 'goodbye', 'see you', 'farewell', 'talk later', 'see you later', 'take care', 'catch you later'],
+                        responses: [
+                            'Goodbye. It was great chatting with you. Come back anytime.',
+                            'See you later. Thanks for the conversation. Have a wonderful day.',
+                            'Farewell. I hope our chat was helpful. Take care.',
+                            'Bye. I really enjoyed our talk. Come chat with me again soon.'
+                        ]
+                    },
+                    
+                    feelings: {
+                        patterns: ['i\'m sad', 'i\'m happy', 'i\'m tired', 'i\'m angry', 'i feel', 'i\'m feeling', 'feeling'],
+                        responses: [
+                            'Thanks for sharing your feelings with me. I\'m here to listen and help if I can.',
+                            'That\'s important to acknowledge. Is there anything I can do to help make things better?',
+                            'I appreciate you opening up. Remember, talking about your feelings is healthy.',
+                            'I hear you. If you want to talk more about it, I\'m all ears!'
+                        ]
+                    },
+                    
+                    learning: {
+                        patterns: ['can you teach', 'teach me', 'how do i', 'how can i', 'explain', 'what is', 'define'],
+                        responses: [
+                            'I\'d love to help you learn! Ask me specific questions about topics you\'re interested in.',
+                            'Teaching is one of my favorite things! What would you like to understand better?',
+                            'Great question! I\'m happy to explain things. What\'s on your mind?',
+                            'I\'m here to help you learn. What topic interests you?'
+                        ]
+                    },
+                    
+                    compliments: {
+                        patterns: ['you\'re great', 'you\'re smart', 'you\'re nice', 'i like you', 'you\'re helpful', 'good job'],
+                        responses: [
+                            'Aw, thank you! That\'s very kind of you to say. I enjoy our conversation too!',
+                            'That means a lot! I\'m glad I can be helpful to you.',
+                            'Thanks for the kind words! I\'m here to make your experience great.',
+                            'You\'re so sweet! I appreciate that. Is there anything else you\'d like to chat about?'
+                        ]
+                    },
+                    
+                    health: {
+                        patterns: ['health', 'exercise', 'fitness', 'diet', 'sleep', 'healthy', 'sick', 'illness'],
+                        responses: [
+                            'Health is really important! While I can\'t provide medical advice, I always encourage staying active and eating well.',
+                            'Taking care of your health is a great priority. Remember to exercise, eat balanced meals, and get enough sleep!',
+                            'Health matters! I hope you\'re taking good care of yourself. If you have medical concerns, please consult a professional.',
+                            'Wellness is key to happiness! Stay hydrated, be active, and get good rest. Those are healthy habits!'
+                        ]
+                    },
+                    
+                    fun: {
+                        patterns: ['let\'s play', 'game', 'quiz', 'riddle', 'fun'],
+                        responses: [
+                            'I love the energy! While I can\'t play traditional games, I can answer trivia or tell you interesting facts. What sounds fun?',
+                            'Fun is important! I can share interesting information or riddles if you\'d like?',
+                            'I like your enthusiasm! How about we have some fun with riddles or trivia questions?',
+                            'Let\'s have fun! Do you want to hear some interesting facts or try some riddles?'
+                        ]
+                    },
+                    
+                    dreams: {
+                        patterns: ['dream', 'goal', 'ambition', 'want to', 'hope to', 'aspire'],
+                        responses: [
+                            'Dreams and goals are wonderful things that give life meaning and direction. What are you passionate about pursuing in your life right now?',
+                            'I absolutely love hearing about people aspirations and what they want to achieve. Please tell me more about your goals and I will listen with genuine interest.',
+                            'Having dreams is one of the most beautiful things about being human. It gives you direction and purpose. What is your biggest goal or dream right now.',
+                            'That is inspiring to hear. I really believe in chasing your dreams and working towards your goals. What do you want to achieve in your life.',
+                            'Goals and dreams are what motivate us to become better versions of ourselves. Tell me about what you are working towards or what you want to accomplish.'
+                        ]
+                    },
+                    
+                    productivity: {
+                        patterns: ['productivity', 'busy', 'work', 'task', 'deadline', 'focus', 'concentration', 'procrastinate'],
+                        responses: [
+                            'Productivity is important and sometimes challenging. Breaking your work into smaller tasks can make things feel less overwhelming. Research shows that the Pomodoro Technique, working in 25-minute focused intervals followed by short breaks, can significantly improve productivity and focus.',
+                            'Procrastination is often caused by fear of failure, perfectionism, or feeling overwhelmed by the task. Studies show that starting with even the smallest part of the task can help overcome procrastination. Once you begin, momentum builds and the work becomes easier.',
+                            'Deadlines help us stay motivated and focused. Without deadlines, many projects would never be completed. Breaking a large project into smaller milestones with their own deadlines can make the overall project feel less overwhelming and increase your chances of success.',
+                            'Our brains are most alert and productive at different times of the day depending on our circadian rhythm. Some people are morning people while others are night owls. Identifying when you are most productive and scheduling important work during those times can improve your output quality.',
+                            'Multitasking actually reduces productivity and increases errors. Research shows that focusing on one task at a time leads to better results than attempting multiple tasks simultaneously. Your brain cannot efficiently process multiple complex tasks at the same time.'
+                        ]
+                    },
+                    
+                    advice: {
+                        patterns: ['advice', 'what should i do', 'recommend', 'suggestion', 'what would you do'],
+                        responses: [
+                            'Good advice usually involves understanding the pros and cons of each option. It is helpful to list out your choices and what consequences each choice might have. Then consider which option aligns best with your values and goals.',
+                            'When seeking advice, it is valuable to get perspectives from multiple people with different experiences and viewpoints. Consider consulting with people who know you well or experts in the relevant field. However, ultimately you must decide what is best for your situation.',
+                            'A helpful technique for decision making is the pros and cons list. Write down the positive and negative aspects of each option. Assign weights to the most important factors. This systematic approach can help clarify which option is likely to be best for you.',
+                            'Past experience is valuable when making decisions. Think about similar situations you or others have faced and what outcomes resulted from different choices. Learning from both successes and failures can guide better decision making in the future.',
+                            'When facing difficult decisions, take time to think carefully rather than rushing. Sleep on it overnight and see if your perspective changes. Decisions made when stressed or emotional are often not the best.'
+                        ]
+                    },
+                    
+                    learning: {
+                        patterns: ['can you teach', 'teach me', 'how do i', 'how can i', 'explain', 'what is', 'define'],
+                        responses: [
+                            'Learning is one of the most rewarding human activities. Research shows that spaced repetition and active recall are among the most effective learning methods. This means reviewing material multiple times over extended periods and testing yourself on the information.',
+                            'Different people learn in different ways. Some people are visual learners who prefer diagrams and images. Others are auditory learners who learn best through listening and discussion. Kinesthetic learners prefer hands on experience. Identifying your learning style can help you study effectively.',
+                            'The Feynman Technique is a powerful learning method where you try to explain a concept in simple terms as if teaching it to a child. If you cannot explain it simply, you do not truly understand it yet. This helps identify gaps in your knowledge.',
+                            'Practice and repetition are essential for learning. Your brain forms stronger neural connections when you practice regularly. This is why students who study consistently throughout a course typically perform better than those who cram at the last minute.',
+                            'Growth mindset is the belief that abilities can be developed through effort and practice. Research by Carol Dweck shows that people with a growth mindset learn more effectively and achieve more than those with a fixed mindset.'
+                        ]
+                    },
+                    
+                    compliments: {
+                        patterns: ['you\'re great', 'you\'re smart', 'you\'re nice', 'i like you', 'you\'re helpful', 'good job'],
+                        responses: [
+                            'Thank you so much for saying that. That is really kind and thoughtful of you. I genuinely enjoy our conversation and I am glad I can be helpful to you.',
+                            'I really appreciate those kind words from you. It means a lot to know that I am being helpful and that you enjoy talking with me.',
+                            'That is very sweet of you to say. I am here to make your experience as good as possible. Your kind words motivate me to be even more helpful.',
+                            'You are very kind to compliment me like that. I appreciate it. Is there anything else I can help you with or anything else you would like to talk about.',
+                            'Thank you for being so nice. Positive feedback like yours makes me want to do even better and be more helpful in our conversations.'
+                        ]
+                    },
+                    
+                    health: {
+                        patterns: ['health', 'exercise', 'fitness', 'diet', 'sleep', 'healthy', 'sick', 'illness', 'wellness'],
+                        responses: [
+                            'Health is one of the most important things in life. While I cannot give medical advice, I do believe in the power of regular exercise, balanced meals, and good sleep. How is your health right now.',
+                            'Taking care of your physical and mental health is really important. Remember to exercise regularly, eat nutritious foods, get enough sleep, and take time to relax and de-stress.',
+                            'Health matters so much. I hope you are taking good care of yourself. If you have any medical concerns or symptoms, please make sure to talk to a qualified doctor or healthcare professional.',
+                            'Wellness is the key to happiness and productivity. This includes physical exercise, eating well, sleeping enough, and managing stress. Which area of wellness would you like to focus on.',
+                            'I am concerned about your wellbeing. Please remember to take breaks, exercise, eat healthy foods, and get adequate rest. These things really do make a difference in how you feel.'
+                        ]
+                    },
+                    
+                    emotions: {
+                        patterns: ['i\'m sad', 'i\'m happy', 'i\'m tired', 'i\'m angry', 'i feel', 'i\'m feeling', 'feeling', 'upset', 'frustrated'],
+                        responses: [
+                            'Thanks for sharing your feelings with me. It is important to acknowledge what you are feeling. I am here to listen without judgment and help if I can. Do you want to talk about what is happening.',
+                            'That is important to acknowledge and express. Your feelings are valid. Is there anything I can do to help make your situation better or easier.',
+                            'I appreciate you opening up to me about your feelings. Remember that talking about emotions is healthy and good for your wellbeing. What is on your mind.',
+                            'I hear you and I understand. Feelings can be complicated and sometimes hard to manage. I am here to listen and support you through whatever you are experiencing.',
+                            'Your emotions are important and matter. Whatever you are feeling right now is okay. Do you want to tell me more about what you are going through.'
+                        ]
+                    },
+                    
+                    fun: {
+                        patterns: ['let\'s play', 'game', 'quiz', 'riddle', 'fun', 'entertainment'],
+                        responses: [
+                            'I love your energy and enthusiasm for having fun. While I cannot play traditional games, I can tell you interesting facts or share riddles if you like.',
+                            'Fun and entertainment are important parts of life. I can share interesting information, riddles, trivia questions, or jokes if you want to have some fun together.',
+                            'I like your enthusiasm for having fun. How about we have some fun with riddles, trivia questions, or interesting facts. What sounds fun to you.',
+                            'Let us have some fun together. Do you want to hear some interesting and surprising facts. Or would you prefer riddles or trivia questions.',
+                            'Having fun is a wonderful way to spend time. I can entertain you with jokes, facts, or riddles. Which one interests you the most.'
+                        ]
+                    },
+                    
+                    motivation: {
+                        patterns: ['motivation', 'motivate', 'inspire', 'encourage', 'can\'t do it', 'i\'m not good enough', 'i give up'],
+                        responses: [
+                            'You are stronger and more capable than you probably think you are. Every expert started as a beginner. Keep trying and do not give up on your goals.',
+                            'I believe in you and your ability to succeed. Even small progress is still progress. Celebrate your wins no matter how small they seem.',
+                            'Remember that failure is just part of learning and growing. Every successful person has failed many times. Get up and try again with determination.',
+                            'You have so much potential inside you. Do not underestimate yourself. Push forward even when things are difficult. You can do this.',
+                            'The fact that you are trying means you already have the courage you need. Keep going. Your efforts will pay off. Believe in yourself because I believe in you.'
+                        ]
+                    },
+                    
+                    weather: {
+                        patterns: ['weather', 'temperature', 'rain', 'sunny', 'cold', 'hot', 'climate', 'storm', 'snow'],
+                        responses: [
+                            'I cannot check the current weather since I work offline, but I hope you are having a great day regardless of the conditions outside. How is the weather treating you.',
+                            'Weather is interesting and can affect our mood and activities. While I cannot check real-time conditions, I know that good weather often makes people happy. What is it like where you are.',
+                            'I do not have access to weather data, but I hope wherever you are, the weather is nice and treating you well. Tell me about the weather where you live.',
+                            'I cannot tell you the forecast, but talking about the weather is still nice. How is the weather where you are. Are you enjoying the conditions.',
+                            'Weather can be unpredictable but that is what makes it interesting. I wish I could check the forecast for you, but I can tell you to dress appropriately and stay safe.'
+                        ]
+                    },
+                    
+                    time: {
+                        patterns: ['what time', 'what\'s the time', 'tell me the time', 'current time', 'what\'s the date', 'today\'s date'],
+                        responses: [
+                            'I cannot track exact time, but I know you can check your device clock. What is important is making the most of your time and enjoying each moment.',
+                            'While I cannot tell you the exact time, I believe your device can show you. Time flies when you are having fun chatting and learning new things.',
+                            'I do not have access to real-time clocks, but every moment counts when learning something new or making memories.',
+                            'Time is precious and valuable. Though I cannot tell you the exact time, I suggest checking your device clock. How are you spending your time today.',
+                            'I wish I could track time for you, but your device can do that. What matters more is that you are using your time well and doing things that matter to you.'
+                        ]
+                    },
+                    
+                    gratitude: {
+                        patterns: ['thank you', 'thanks', 'thank', 'appreciate', 'grateful', 'much appreciated'],
+                        responses: [
+                            'You are very welcome. I am happy to help and I am here whenever you need me. Feel free to ask me anything else anytime.',
+                            'My pleasure. That is what I am here for. Do you have more questions or is there anything else I can help you with.',
+                            'I am glad I could be helpful. Your gratitude means a lot to me. Is there anything else you would like to discuss or learn about.',
+                            'You are so welcome. It makes me happy to know that I could help you. Please come back anytime you need assistance or just want to chat.',
+                            'Thank you for the kind words. Helping you is a pleasure and I am always here for you. What else can I do for you.'
+                        ]
+                    },
+                    
+                    goodbye: {
+                        patterns: ['bye', 'goodbye', 'see you', 'farewell', 'talk later', 'see you later', 'take care', 'catch you later'],
+                        responses: [
+                            'Goodbye my friend. It was wonderful chatting with you today. Please come back anytime you want to talk. I will be here waiting for you.',
+                            'See you later. Thanks so much for the great conversation. I really enjoyed our time together. Have a fantastic and wonderful day.',
+                            'Farewell. I hope our chat was helpful and enjoyable. Remember to take care of yourself and be kind to yourself. Come back soon.',
+                            'Bye. I really enjoyed our talk and getting to know you better. Come chat with me again soon. I look forward to seeing you next time.',
+                            'Take care and be well. It was a pleasure talking with you. Remember that I am always here if you need to talk or need help. Goodbye for now.'
+                        ]
+                    },
+                    
+                    name: {
+                        patterns: ['my name', 'my name is', 'i am', 'call me', 'i\'m', 'im '],
+                        responses: [
+                            'Nice to meet you and thanks for telling me your name. I will remember that. Is there anything you would like to talk about or any way I can help you.',
+                            'Great. Thanks for introducing yourself. I appreciate knowing your name. How can I assist you or what would you like to chat about.',
+                            'It is a pleasure to meet you. Now I know your name and I would like to know more about you. What interests you or what brings you here today.',
+                            'Awesome. Now I know your name and I feel like we are becoming friends. What can I help you with or what would you like to discuss.',
+                            'Thank you for sharing your name with me. It is nice to have a name to go with our conversation. What is on your mind today.'
+                        ]
+                    },
+                    
+                    science: {
+                        patterns: ['science', 'biology', 'physics', 'chemistry', 'space', 'universe', 'atoms', 'gravity', 'earth', 'planet'],
+                        responses: [
+                            'Science is the systematic study of the natural world through observation and experimentation. Physics studies matter and energy, chemistry studies the composition and reactions of substances, and biology studies living organisms. Science has helped us understand how the universe works.',
+                            'The Earth is approximately 4.54 billion years old and orbits around the Sun. Our solar system contains eight planets: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, and Neptune. The Sun is so large that it makes up about 99.86 percent of all the mass in our entire solar system.',
+                            'Gravity is the force that attracts objects with mass toward each other. It was described scientifically by Isaac Newton and later refined by Albert Einstein in his theory of general relativity. Everything in the universe with mass experiences gravitational pull.',
+                            'Atoms are the basic building blocks of all matter. They consist of a nucleus containing protons and neutrons, surrounded by electrons. The number of protons determines what element an atom is. Hydrogen has one proton, oxygen has eight protons, and gold has 79 protons.',
+                            'Light travels at approximately 299792458 meters per second in a vacuum. This is considered the universal speed limit. Light from the Sun takes about eight minutes and twenty seconds to reach Earth. The speed of light is denoted by the letter c in physics equations.'
+                        ]
+                    },
+                    
+                    geography: {
+                        patterns: ['geography', 'country', 'city', 'map', 'continent', 'ocean', 'mountain', 'river', 'population', 'capital'],
+                        responses: [
+                            'Geography is the study of places, people, and the physical features of Earth. There are seven continents: Africa, Antarctica, Asia, Europe, North America, Oceania, and South America. Each continent has unique climates, cultures, and ecosystems.',
+                            'The largest ocean is the Pacific Ocean, which covers an area of about 165 million square kilometers. The deepest point in the ocean is the Mariana Trench in the western Pacific, which is approximately 11000 meters deep. About 71 percent of Earth surface is covered by water.',
+                            'The world population is currently over 8 billion people. The most populous country in the world is India, with over 1.4 billion people. China is the second most populous country. The smallest country in the world is Vatican City, with a population of less than 1000 people.',
+                            'The tallest mountain in the world is Mount Everest, which is 8849 meters tall above sea level. It is located in the Himalayas on the border between Nepal and Tibet. The Nile River is the longest river in the world, stretching over 6650 kilometers through Africa.',
+                            'Different regions have different climates based on latitude, altitude, ocean currents, and proximity to large bodies of water. Tropical regions near the equator are hot and humid, while polar regions near the North and South Poles are extremely cold.'
+                        ]
+                    },
+                    
+                    history: {
+                        patterns: ['history', 'war', 'ancient', 'historical', 'civilization', 'century', 'year', 'event', 'dynasty'],
+                        responses: [
+                            'History is the study of past events and civilizations. The ancient world included great civilizations like Egypt, Mesopotamia, Greece, and Rome. These civilizations made contributions to mathematics, philosophy, architecture, and government that still influence us today.',
+                            'The Renaissance was a period from the 14th to 17th century that marked the transition from medieval to modern times. It was characterized by a renewed interest in classical learning and a flowering of art, science, and exploration. Famous figures like Leonardo da Vinci and Michelangelo lived during this time.',
+                            'The Industrial Revolution began in Britain in the late 1700s and changed the world. It introduced factories, steam power, and mechanized production. This led to massive social and economic changes including urbanization and the development of modern capitalism.',
+                            'World War One lasted from 1914 to 1918 and involved most of the world major powers. It was one of the deadliest conflicts in human history with millions of casualties. World War Two followed from 1939 to 1945 and was even more devastating.',
+                            'The Ancient Egyptians built the pyramids over 4000 years ago as tombs for pharaohs. The Great Pyramid of Giza was the tallest human made structure for thousands of years. Ancient Rome had an empire that lasted over 500 years and created a lasting legal system.'
+                        ]
+                    },
+                    
+                    mathematics: {
+                        patterns: ['math', 'mathematics', 'calculate', 'number', 'equation', 'geometry', 'algebra', 'pi', 'zero'],
+                        responses: [
+                            'Mathematics is the study of numbers, shapes, and patterns. It is a fundamental tool used in science, engineering, economics, and many other fields. Mathematics provides a way to describe and understand the world through logic and precision.',
+                            'Pi is a mathematical constant approximately equal to 3.14159. It is the ratio of a circle circumference to its diameter. Pi appears in many mathematical formulas related to circles and is an irrational number, meaning it cannot be expressed as a simple fraction.',
+                            'Zero is one of the most important discoveries in mathematics. Many ancient civilizations did not have a symbol for zero, which made calculations very difficult. The concept of zero was developed in India and later adopted by the Islamic world and eventually Europe.',
+                            'The Pythagorean theorem states that in a right triangle, the square of the hypotenuse equals the sum of the squares of the other two sides. This is written as a squared plus b squared equals c squared. This theorem is fundamental to geometry and has countless practical applications.',
+                            'Algebra uses letters and symbols to represent numbers and relationships. This allows us to solve problems and create formulas that work for many different situations. Algebra was developed over centuries by mathematicians from different cultures.'
+                        ]
+                    },
+                    
+                    nutrition: {
+                        patterns: ['nutrition', 'food', 'diet', 'vitamin', 'protein', 'carbs', 'fat', 'calorie', 'healthy eating'],
+                        responses: [
+                            'Nutrition is the science of how food affects our health and growth. A balanced diet includes proteins, carbohydrates, fats, vitamins, minerals, and water. Proteins are essential for building and repairing muscles and tissues.',
+                            'Vitamins are essential nutrients that our body needs in small amounts to function properly. Vitamin C supports the immune system and is found in citrus fruits and leafy greens. Vitamin D helps absorb calcium for strong bones and can be obtained from sunlight exposure and fatty fish.',
+                            'Calcium is a mineral essential for strong bones and teeth. It also plays important roles in muscle function and nerve transmission. Good sources of calcium include dairy products, leafy green vegetables, and fortified plant based milks.',
+                            'Fiber is an important part of a healthy diet. It comes from plant based foods like whole grains, fruits, and vegetables. Fiber helps with digestion, lowers cholesterol, and helps maintain stable blood sugar levels. Most people do not eat enough fiber.',
+                            'Drinking adequate water is crucial for health. Water helps with digestion, nutrient absorption, temperature regulation, and removing waste products. Most health experts recommend drinking at least eight glasses of water per day, though individual needs vary based on activity level.'
+                        ]
+                    },
+                    
+                    invention: {
+                        patterns: ['invention', 'invented', 'telephone', 'internet', 'computer history', 'telegraph', 'electricity', 'innovate'],
+                        responses: [
+                            'The telephone was invented by Alexander Graham Bell in 1876. It revolutionized long distance communication by allowing people to speak to each other across great distances. Before the telephone, communication was limited to written messages or in person conversation.',
+                            'The internet originated from a project called ARPANET funded by the Department of Defense in the late 1960s. The World Wide Web was invented by Tim Berners-Lee in 1989. The combination of these technologies created the modern internet that billions of people use today.',
+                            'Electricity was not invented by one person but discovered and developed by many scientists including Benjamin Franklin, Michael Faraday, and Nikola Tesla. Electricity revolutionized society by powering lights, motors, and countless devices.',
+                            'The first electronic general purpose computer was the ENIAC, completed in 1946. It was huge, filling an entire room and weighing 30 tons. Modern computers are billions of times more powerful and millions of times smaller than ENIAC.',
+                            'The first programmable computer was considered to be the Analytical Engine designed by Charles Babbage in the 1830s. Although it was never built during his lifetime, it had all the fundamental elements of a modern computer. Computers have evolved from mechanical devices to the modern computers we use today.'
+                        ]
+                    },
+                    
+                    environment: {
+                        patterns: ['environment', 'climate change', 'pollution', 'recycling', 'sustainable', 'green', 'nature', 'ecosystem', 'conservation'],
+                        responses: [
+                            'The environment refers to the natural world including land, water, air, plants, and animals. Climate change is a serious global issue caused primarily by greenhouse gas emissions from human activities. These emissions trap heat in the atmosphere and cause global temperature to rise, affecting weather patterns and ecosystems.',
+                            'Recycling is the process of converting waste materials into new products. This helps conserve natural resources and reduces the amount of waste going to landfills. Common recyclable materials include paper, plastic, glass, and metal.',
+                            'Renewable energy comes from sources that can be replenished naturally, such as solar, wind, hydro, and geothermal energy. These energy sources produce little to no greenhouse gas emissions compared to fossil fuels. Transitioning to renewable energy is important for combating climate change.',
+                            'Deforestation is the clearing of forests for agriculture, timber, or development. This destroys habitats for millions of species and contributes to climate change because trees absorb carbon dioxide. Conservation efforts are important to protect remaining forests.',
+                            'Biodiversity refers to the variety of plants, animals, and microorganisms in an ecosystem. High biodiversity makes ecosystems more resilient to changes and provides important services like clean water and air. Human activities are causing species extinction at alarming rates.'
+                        ]
+                    }
+                };
+            }
+            
+            normalizeInput(text) {
+                return text.toLowerCase().trim();
+            }
+            
+            findBestMatch(userMessage) {
+                const normalized = this.normalizeInput(userMessage);
+                let bestMatch = null;
+                let highestScore = 0;
+                
+                for (const [category, data] of Object.entries(this.trainingData)) {
+                    for (const pattern of data.patterns) {
+                        if (normalized.includes(pattern)) {
+                            const score = pattern.length;
+                            if (score > highestScore) {
+                                highestScore = score;
+                                bestMatch = data.responses;
+                            }
+                        }
+                    }
+                }
+                
+                return bestMatch;
+            }
+            
+            getRandomResponse(responses) {
+                return responses[Math.floor(Math.random() * responses.length)];
+            }
+            
+            generateFallbackResponse(userMessage) {
+                const fallbacks = [
+                    'That is interesting. Tell me more about that.',
+                    'I see. Can you give me more details.',
+                    'That is a good point. What else is on your mind.',
+                    'I appreciate that. Is there anything else you would like to discuss.',
+                    'That is thoughtful. What made you think about that.',
+                    'I understand. Would you like to talk about something specific.',
+                    'That sounds important to you. Tell me more.',
+                    'Interesting perspective. Do you have more thoughts on that.'
+                ];
+                return fallbacks[Math.floor(Math.random() * fallbacks.length)];
+            }
+            
+            respond(userMessage) {
+                this.conversationHistory.push({ role: 'user', message: userMessage });
+                
+                let response;
+                const matchedResponses = this.findBestMatch(userMessage);
+                
+                if (matchedResponses) {
+                    response = this.getRandomResponse(matchedResponses);
+                } else {
+                    response = this.generateFallbackResponse(userMessage);
+                }
+                
+                this.conversationHistory.push({ role: 'bot', message: response });
+                return response;
+            }
+        }
+
+        // Initialize Chipi AI
+        const chipi = new ChipiAI();
+        const messagesDiv = document.getElementById('messages');
+        const input = document.getElementById('message-input');
+        const sendBtn = document.getElementById('send-btn');
+        
+        function addMessage(role, text) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.textContent = text;
+            
+            messageDiv.appendChild(contentDiv);
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+        
+        function showTyping() {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message bot';
+            messageDiv.id = 'typing-indicator';
+            
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'typing';
+            typingDiv.innerHTML = '<span></span><span></span><span></span>';
+            
+            messageDiv.appendChild(typingDiv);
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+        
+        function removeTyping() {
+            const typing = document.getElementById('typing-indicator');
+            if (typing) typing.remove();
+        }
+        
+        function sendMessage() {
+            const userMessage = input.value.trim();
+            if (!userMessage) return;
+            
+            addMessage('user', userMessage);
+            input.value = '';
+            sendBtn.disabled = true;
+            
+            showTyping();
+            
+            // Simulate natural response delay
+            setTimeout(() => {
+                removeTyping();
+                const response = chipi.respond(userMessage);
+                addMessage('bot', response);
+                sendBtn.disabled = false;
+                input.focus();
+            }, 600);
+        }
+        
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+        
+        sendBtn.addEventListener('click', sendMessage);
+        input.focus();
+        
+        // Modal Functions
+        function openAboutModal() {
+            document.getElementById('aboutModal').classList.add('show');
+        }
+        
+        function closeAboutModal() {
+            document.getElementById('aboutModal').classList.remove('show');
+        }
+        
+        function openContactModal() {
+            document.getElementById('contactModal').classList.add('show');
+        }
+        
+        function closeContactModal() {
+            document.getElementById('contactModal').classList.remove('show');
+        }
+        
+        // Close modal when clicking outside of it
+        window.onclick = function(event) {
+            const aboutModal = document.getElementById('aboutModal');
+            const contactModal = document.getElementById('contactModal');
+            
+            if (event.target === aboutModal) {
+                aboutModal.classList.remove('show');
+            }
+            if (event.target === contactModal) {
+                contactModal.classList.remove('show');
+            }
+        }
+    </script>
+</body>
+</html>

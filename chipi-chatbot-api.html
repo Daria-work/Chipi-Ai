@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chipi - AI Chatbot with Dynamic Data</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            height: 100%;
+            width: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #4da6ff 0%, #66d9b3 100%);
+        }
+        
+        .container {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .chat-box {
+            width: 100%;
+            max-width: 700px;
+            height: 90vh;
+            max-height: 800px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4da6ff 0%, #66d9b3 100%);
+            color: white;
+            padding: 25px 20px;
+            text-align: center;
+            border-radius: 15px 15px 0 0;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        
+        .header p {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-bottom: 12px;
+        }
+        
+        .connection-status {
+            font-size: 11px;
+            padding: 5px 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+        
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 5px;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-dot.connected {
+            background: #4ade80;
+        }
+        
+        .status-dot.disconnected {
+            background: #f87171;
+            animation: none;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .header-btn {
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        
+        .header-btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+            border-color: white;
+        }
+        
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .message {
+            display: flex;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .message.user {
+            justify-content: flex-end;
+        }
+        
+        .message.bot {
+            justify-content: flex-start;
+        }
+        
+        .message-content {
+            max-width: 75%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            word-wrap: break-word;
+            line-height: 1.5;
+            font-size: 14px;
+        }
+        
+        .message.user .message-content {
+            background: linear-gradient(135deg, #4da6ff 0%, #7fc9ff 100%);
+            color: white;
+            border-radius: 18px 18px 4px 18px;
+        }
+        
+        .message.bot .message-content {
+            background: linear-gradient(135deg, #d9f5ed 0%, #e8faf5 100%);
+            color: #1a4d33;
+            border-radius: 18px 18px 18px 4px;
+        }
+        
+        .input-section {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+        }
+        
+        #message-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+        
+        #message-input:focus {
+            outline: none;
+            border-color: #66d9b3;
+        }
+        
+        .send-btn {
+            background: linear-gradient(135deg, #66d9b3 0%, #80e5c0 100%);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+        
+        .send-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .send-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .typing {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            padding: 12px 16px;
+        }
+        
+        .typing span {
+            width: 8px;
+            height: 8px;
+            background: #66d9b3;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite;
+        }
+        
+        .typing span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .typing span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes bounce {
+            0%, 60%, 100% {
+                opacity: 0.5;
+                transform: translateY(0);
+            }
+            30% {
+                opacity: 1;
+                transform: translateY(-10px);
+            }
+        }
+        
+        .messages::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .messages::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        .messages::-webkit-scrollbar-thumb {
+            background: #66d9b3;
+            border-radius: 3px;
+        }
+        
+        .messages::-webkit-scrollbar-thumb:hover {
+            background: #4da6ff;
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .modal.show {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            margin: auto;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #4da6ff;
+            padding-bottom: 15px;
+        }
+        
+        .modal-header h2 {
+            color: #4da6ff;
+            font-size: 24px;
+            margin: 0;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+            transition: color 0.3s;
+        }
+        
+        .close-btn:hover {
+            color: #333;
+        }
+        
+        .modal-content p {
+            line-height: 1.8;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .modal-content h3 {
+            color: #66d9b3;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: inherit;
+            font-size: 14px;
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .form-group input:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #4da6ff;
+            box-shadow: 0 0 5px rgba(77, 166, 255, 0.3);
+        }
+        
+        .btn-submit {
+            background: linear-gradient(135deg, #4da6ff 0%, #66d9b3 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+        
+        .btn-submit:hover {
+            transform: scale(1.02);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-card {
+            background: #f0f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border-left: 4px solid #4da6ff;
+        }
+        
+        .stat-card .number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4da6ff;
+        }
+        
+        .stat-card .label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .category-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .category-tag {
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 12px;
+            text-align: center;
+        }
+        
+        @media (max-width: 600px) {
+            .chat-box {
+                max-height: 100vh;
+                border-radius: 0;
+                height: 100%;
+            }
+            
+            .header {
+                border-radius: 0;
+            }
+            
+            .header-buttons {
+                gap: 5px;
+            }
+            
+            .header-btn {
+                padding: 6px 12px;
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="chat-box">
+            <div class="header">
+                <h1>Chipi</h1>
+                <p>AI Assistant with Live Data Updates</p>
+                <div class="connection-status">
+                    <span class="status-dot connected" id="statusDot"></span>
+                    <span id="statusText">Connecting to server...</span>
+                </div>
+                <div class="header-buttons">
+                    <button class="header-btn" onclick="openAboutModal()">About Chipi</button>
+                    <button class="header-btn" onclick="openContactModal()">Contact Us</button>
+                    <button class="header-btn" onclick="openAdminModal()">Admin Panel</button>
+                    <button class="header-btn" onclick="refreshData()">Refresh Data</button>
+                </div>
+            </div>
+            
+            <div class="messages" id="messages">
+                <div class="message bot">
+                    <div class="message-content">Hello there. I am Chipi, your AI assistant. I am connected to a live Python server that powers my responses. What can I help you with today?</div>
+                </div>
+            </div>
+            
+            <div class="input-section">
+                <input 
+                    type="text" 
+                    id="message-input" 
+                    placeholder="Type your message here..." 
+                    autocomplete="off"
+                />
+                <button class="send-btn" id="send-btn">→</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Panel Modal -->
+    <div id="adminModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Admin Panel - Update AI Data</h2>
+                <button class="close-btn" onclick="closeAdminModal()">&times;</button>
+            </div>
+            
+            <div id="adminStats"></div>
+            
+            <h3>Add New Response</h3>
+            <div class="form-group">
+                <label>Category:</label>
+                <input type="text" id="categoryInput" placeholder="e.g., greetings, help, science">
+            </div>
+            <div class="form-group">
+                <label>Response Text:</label>
+                <textarea id="responseInput" placeholder="Enter the new response..."></textarea>
+            </div>
+            <button class="btn-submit" onclick="addResponseToAPI()">Add Response</button>
+            
+            <h3 style="margin-top: 25px;">Add New Pattern</h3>
+            <div class="form-group">
+                <label>Category:</label>
+                <input type="text" id="patternCategoryInput" placeholder="e.g., greetings, help, science">
+            </div>
+            <div class="form-group">
+                <label>Pattern (keyword/phrase):</label>
+                <input type="text" id="patternInput" placeholder="e.g., hello, how are you, hi there">
+            </div>
+            <button class="btn-submit" onclick="addPatternToAPI()">Add Pattern</button>
+            
+            <h3 style="margin-top: 25px;">Create New Category</h3>
+            <div class="form-group">
+                <label>Category Name:</label>
+                <input type="text" id="newCategoryName" placeholder="e.g., sports, cooking, business">
+            </div>
+            <div class="form-group">
+                <label>Initial Patterns (comma-separated):</label>
+                <input type="text" id="newCategoryPatterns" placeholder="e.g., football, soccer, basketball">
+            </div>
+            <div class="form-group">
+                <label>Initial Response:</label>
+                <textarea id="newCategoryResponse" placeholder="Enter an initial response..."></textarea>
+            </div>
+            <button class="btn-submit" onclick="createNewCategory()">Create Category</button>
+        </div>
+    </div>
+
+    <!-- About Modal -->
+    <div id="aboutModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>About Chipi</h2>
+                <button class="close-btn" onclick="closeAboutModal()">&times;</button>
+            </div>
+            <p><strong>Chipi</strong> is a revolutionary AI assistant that combines client-side JavaScript with a Python backend for dynamic data management.</p>
+            
+            <h3>Architecture</h3>
+            <ul style="margin-left: 20px;">
+                <li><strong>Frontend:</strong> HTML5 + JavaScript (runs in your browser)</li>
+                <li><strong>Backend:</strong> Python Flask server (REST API)</li>
+                <li><strong>Data:</strong> Dynamic JSON training data with live updates</li>
+                <li><strong>Communication:</strong> HTTP requests with CORS enabled</li>
+            </ul>
+            
+            <h3>Key Features</h3>
+            <ul style="margin-left: 20px;">
+                <li>Live data synchronization with Python backend</li>
+                <li>Admin panel to update training data in real-time</li>
+                <li>Add new responses and patterns dynamically</li>
+                <li>Create new categories on-the-fly</li>
+                <li>Server connection status monitoring</li>
+                <li>Beautiful soft blue-green gradient design</li>
+            </ul>
+            
+            <h3>How It Works</h3>
+            <p>When you start the application, Chipi connects to a Python Flask server running on localhost:5000. The server manages training data stored in a JSON file. You can update this data through the Admin Panel without restarting the application. All conversations use the live training data from the server.</p>
+        </div>
+    </div>
+
+    <!-- Contact Modal -->
+    <div id="contactModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Contact Information</h2>
+                <button class="close-btn" onclick="closeContactModal()">&times;</button>
+            </div>
+            
+            <h3>General Inquiries</h3>
+            <p><strong>Email:</strong> info@chipi-ai.com</p>
+            
+            <h3>Support & Technical Issues</h3>
+            <p><strong>Email:</strong> support@chipi-ai.com</p>
+            
+            <h3>Business & Partnership</h3>
+            <p><strong>Email:</strong> business@chipi-ai.com</p>
+            
+            <h3>Direct Phone</h3>
+            <p><strong>Phone:</strong> +1 (555) 123-4567</p>
+            
+            <h3>Office Address</h3>
+            <p>Chipi AI Headquarters<br>
+            456 Innovation Avenue<br>
+            Tech City, TC 12345<br>
+            United States</p>
+            
+            <h3>Social Media</h3>
+            <p><strong>Twitter:</strong> @ChipiAI<br>
+            <strong>LinkedIn:</strong> Chipi-AI-Inc<br>
+            <strong>GitHub:</strong> github.com/chipi-ai</p>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000/api';
+        let chipiAI = null;
+        let serverConnected = false;
+
+        // Initialize Chipi
+        class ChipiAI {
+            constructor() {
+                this.conversationHistory = [];
+                this.trainingData = null;
+                this.initialized = false;
+            }
+            
+            async loadTrainingDataFromServer() {
+                try {
+                    const response = await fetch(`${API_URL}/data`);
+                    if (!response.ok) throw new Error('Failed to load data');
+                    const result = await response.json();
+                    this.trainingData = result.data;
+                    this.initialized = true;
+                    return true;
+                } catch (error) {
+                    console.error('Error loading training data:', error);
+                    return false;
+                }
+            }
+            
+            normalizeInput(text) {
+                return text.toLowerCase().trim();
+            }
+            
+            findBestMatch(userMessage) {
+                if (!this.trainingData) return null;
+                
+                const normalized = this.normalizeInput(userMessage);
+                let bestMatch = null;
+                let highestScore = 0;
+                
+                for (const [category, data] of Object.entries(this.trainingData)) {
+                    if (data.patterns && data.responses) {
+                        for (const pattern of data.patterns) {
+                            if (normalized.includes(pattern)) {
+                                const score = pattern.length;
+                                if (score > highestScore) {
+                                    highestScore = score;
+                                    bestMatch = data.responses;
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                return bestMatch;
+            }
+            
+            getRandomResponse(responses) {
+                return responses[Math.floor(Math.random() * responses.length)];
+            }
+            
+            generateFallbackResponse(userMessage) {
+                const fallbacks = [
+                    'That is interesting. Tell me more about that.',
+                    'I see. Can you give me more details.',
+                    'That is a good point. What else is on your mind.',
+                    'I appreciate that. Is there anything else you would like to discuss.',
+                    'That sounds important to you. Tell me more.',
+                    'Interesting perspective. Do you have more thoughts on that.'
+                ];
+                return fallbacks[Math.floor(Math.random() * fallbacks.length)];
+            }
+            
+            respond(userMessage) {
+                this.conversationHistory.push({ role: 'user', message: userMessage });
+                
+                let response;
+                const matchedResponses = this.findBestMatch(userMessage);
+                
+                if (matchedResponses && matchedResponses.length > 0) {
+                    response = this.getRandomResponse(matchedResponses);
+                } else {
+                    response = this.generateFallbackResponse(userMessage);
+                }
+                
+                this.conversationHistory.push({ role: 'bot', message: response });
+                return response;
+            }
+        }
+
+        // Initialize app
+        async function initializeApp() {
+            chipiAI = new ChipiAI();
+            const loaded = await chipiAI.loadTrainingDataFromServer();
+            
+            if (loaded) {
+                serverConnected = true;
+                updateStatusIndicator(true);
+            } else {
+                serverConnected = false;
+                updateStatusIndicator(false);
+            }
+        }
+
+        function updateStatusIndicator(connected) {
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            
+            if (connected) {
+                statusDot.className = 'status-dot connected';
+                statusText.textContent = 'Connected to Server';
+            } else {
+                statusDot.className = 'status-dot disconnected';
+                statusText.textContent = 'Server Disconnected - Using Default Responses';
+            }
+        }
+
+        const messagesDiv = document.getElementById('messages');
+        const input = document.getElementById('message-input');
+        const sendBtn = document.getElementById('send-btn');
+        
+        function addMessage(role, text) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.textContent = text;
+            
+            messageDiv.appendChild(contentDiv);
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+        
+        function showTyping() {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message bot';
+            messageDiv.id = 'typing-indicator';
+            
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'typing';
+            typingDiv.innerHTML = '<span></span><span></span><span></span>';
+            
+            messageDiv.appendChild(typingDiv);
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+        
+        function removeTyping() {
+            const typing = document.getElementById('typing-indicator');
+            if (typing) typing.remove();
+        }
+        
+        function sendMessage() {
+            const userMessage = input.value.trim();
+            if (!userMessage || !chipiAI) return;
+            
+            addMessage('user', userMessage);
+            input.value = '';
+            sendBtn.disabled = true;
+            
+            showTyping();
+            
+            setTimeout(() => {
+                removeTyping();
+                const response = chipiAI.respond(userMessage);
+                addMessage('bot', response);
+                sendBtn.disabled = false;
+                input.focus();
+            }, 600);
+        }
+        
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+        
+        sendBtn.addEventListener('click', sendMessage);
+        
+        // Modal Functions
+        function openAboutModal() {
+            document.getElementById('aboutModal').classList.add('show');
+        }
+        
+        function closeAboutModal() {
+            document.getElementById('aboutModal').classList.remove('show');
+        }
+        
+        function openContactModal() {
+            document.getElementById('contactModal').classList.add('show');
+        }
+        
+        function closeContactModal() {
+            document.getElementById('contactModal').classList.remove('show');
+        }
+        
+        function openAdminModal() {
+            document.getElementById('adminModal').classList.add('show');
+            loadAdminStats();
+        }
+        
+        function closeAdminModal() {
+            document.getElementById('adminModal').classList.remove('show');
+        }
+        
+        // Admin Functions
+        async function loadAdminStats() {
+            try {
+                const response = await fetch(`${API_URL}/stats`);
+                const result = await response.json();
+                
+                const statsHtml = `
+                    <h3>Current Statistics</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="number">${result.totalCategories}</div>
+                            <div class="label">Categories</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="number">${result.totalPatterns}</div>
+                            <div class="label">Patterns</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="number">${result.totalResponses}</div>
+                            <div class="label">Responses</div>
+                        </div>
+                    </div>
+                    <h3 style="margin-top: 20px;">Categories</h3>
+                    <div class="category-list">
+                        ${result.categories.map(cat => `<div class="category-tag">${cat}</div>`).join('')}
+                    </div>
+                `;
+                
+                document.getElementById('adminStats').innerHTML = statsHtml;
+            } catch (error) {
+                console.error('Error loading stats:', error);
+                document.getElementById('adminStats').innerHTML = '<p style="color: red;">Failed to load statistics</p>';
+            }
+        }
+        
+        async function addResponseToAPI() {
+            const category = document.getElementById('categoryInput').value.trim();
+            const response = document.getElementById('responseInput').value.trim();
+            
+            if (!category || !response) {
+                alert('Please fill in both category and response');
+                return;
+            }
+            
+            try {
+                const result = await fetch(`${API_URL}/data/add-response/${category}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ response })
+                });
+                
+                const data = await result.json();
+                if (data.status === 'success') {
+                    alert(`Response added successfully to ${category}!`);
+                    document.getElementById('categoryInput').value = '';
+                    document.getElementById('responseInput').value = '';
+                    loadAdminStats();
+                    await chipiAI.loadTrainingDataFromServer();
+                } else {
+                    alert(`Error: ${data.message}`);
+                }
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        }
+        
+        async function addPatternToAPI() {
+            const category = document.getElementById('patternCategoryInput').value.trim();
+            const pattern = document.getElementById('patternInput').value.trim();
+            
+            if (!category || !pattern) {
+                alert('Please fill in both category and pattern');
+                return;
+            }
+            
+            try {
+                const result = await fetch(`${API_URL}/data/add-pattern/${category}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pattern })
+                });
+                
+                const data = await result.json();
+                if (data.status === 'success') {
+                    alert(`Pattern added successfully to ${category}!`);
+                    document.getElementById('patternCategoryInput').value = '';
+                    document.getElementById('patternInput').value = '';
+                    loadAdminStats();
+                    await chipiAI.loadTrainingDataFromServer();
+                } else {
+                    alert(`Error: ${data.message}`);
+                }
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        }
+        
+        async function createNewCategory() {
+            const name = document.getElementById('newCategoryName').value.trim();
+            const patternsStr = document.getElementById('newCategoryPatterns').value.trim();
+            const response = document.getElementById('newCategoryResponse').value.trim();
+            
+            if (!name || !patternsStr || !response) {
+                alert('Please fill in all fields');
+                return;
+            }
+            
+            const patterns = patternsStr.split(',').map(p => p.trim());
+            
+            try {
+                const result = await fetch(`${API_URL}/data/create-category`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, patterns, responses: [response] })
+                });
+                
+                const data = await result.json();
+                if (data.status === 'success') {
+                    alert(`Category "${name}" created successfully!`);
+                    document.getElementById('newCategoryName').value = '';
+                    document.getElementById('newCategoryPatterns').value = '';
+                    document.getElementById('newCategoryResponse').value = '';
+                    loadAdminStats();
+                    await chipiAI.loadTrainingDataFromServer();
+                } else {
+                    alert(`Error: ${data.message}`);
+                }
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        }
+        
+        async function refreshData() {
+            await chipiAI.loadTrainingDataFromServer();
+            alert('Training data refreshed from server!');
+        }
+        
+        window.onclick = function(event) {
+            const aboutModal = document.getElementById('aboutModal');
+            const contactModal = document.getElementById('contactModal');
+            const adminModal = document.getElementById('adminModal');
+            
+            if (event.target === aboutModal) aboutModal.classList.remove('show');
+            if (event.target === contactModal) contactModal.classList.remove('show');
+            if (event.target === adminModal) adminModal.classList.remove('show');
+        }
+        
+        // Start application
+        initializeApp();
+        input.focus();
+    </script>
+</body>
+</html>
