@@ -696,15 +696,26 @@
         // Initialize app
         async function initializeApp() {
             chipiAI = new ChipiAI();
-            const loaded = await chipiAI.loadTrainingDataFromServer();
-            
-            if (loaded) {
-                serverConnected = true;
-                updateStatusIndicator(true);
-            } else {
-                serverConnected = false;
-                updateStatusIndicator(false);
-            }
+
+                // Try a health check first, then load training data if server available
+                try {
+                    const healthy = await checkServerHealth();
+                    if (healthy) {
+                        const loaded = await chipiAI.loadTrainingDataFromServer();
+                        serverConnected = !!loaded;
+                        updateStatusIndicator(serverConnected);
+                    } else {
+                        serverConnected = false;
+                        updateStatusIndicator(false);
+                    }
+                } catch (err) {
+                    console.warn('Error during initialization health check:', err);
+                    serverConnected = false;
+                    updateStatusIndicator(false);
+                }
+
+                // Start periodic polling to auto-reconnect when server returns
+                startHealthPoll();
         }
 
         function updateStatusIndicator(connected) {
@@ -719,6 +730,50 @@
                 statusText.textContent = 'Server Disconnected - Using Default Responses';
             }
         }
+
+                // Health polling and auto-reconnect
+                let healthPollInterval = null;
+                const HEALTH_POLL_MS = 5000; // check every 5 seconds
+
+                async function checkServerHealth() {
+                    try {
+                        const resp = await fetch(`${API_URL}/health`);
+                        if (!resp.ok) throw new Error('Health check failed');
+                        const json = await resp.json();
+
+                        // If we were disconnected previously, reload training data when back
+                        if (!serverConnected) {
+                            serverConnected = true;
+                            updateStatusIndicator(true);
+                            try {
+                                await chipiAI.loadTrainingDataFromServer();
+                            } catch (e) {
+                                console.warn('Failed to reload training data after reconnect:', e);
+                            }
+                        }
+                        return true;
+                    } catch (err) {
+                        // mark disconnected
+                        if (serverConnected) {
+                            serverConnected = false;
+                            updateStatusIndicator(false);
+                        }
+                        return false;
+                    }
+                }
+
+                function startHealthPoll() {
+                    if (healthPollInterval) return;
+                    // Run immediately then on interval
+                    checkServerHealth();
+                    healthPollInterval = setInterval(checkServerHealth, HEALTH_POLL_MS);
+                }
+
+                function stopHealthPoll() {
+                    if (!healthPollInterval) return;
+                    clearInterval(healthPollInterval);
+                    healthPollInterval = null;
+                }
 
         const messagesDiv = document.getElementById('messages');
         const input = document.getElementById('message-input');
@@ -963,3 +1018,4 @@
     </script>
 </body>
 </html>
+
